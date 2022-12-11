@@ -1,0 +1,199 @@
+function varargout = gui_images(varargin)
+% GUI_IMAGES MATLAB code for gui_images.fig
+%      GUI_IMAGES, by itself, creates a new GUI_IMAGES or raises the existing
+%      singleton*.
+%
+%      H = GUI_IMAGES returns the handle to a new GUI_IMAGES or the handle to
+%      the existing singleton*.
+%
+%      GUI_IMAGES('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in GUI_IMAGES.M with the given input arguments.
+%
+%      GUI_IMAGES('Property','Value',...) creates a new GUI_IMAGES or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before gui_images_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to gui_images_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Edit the above text to modify the response to help gui_images
+
+% Last Modified by GUIDE v2.5 10-Dec-2022 13:35:14
+
+% Begin initialization code - DO NOT EDIT
+
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @gui_images_OpeningFcn, ...
+                   'gui_OutputFcn',  @gui_images_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% --- Executes just before gui_images is made visible.
+function gui_images_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to gui_images (see VARARGIN)
+
+% Choose default command line output for gui_images
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes gui_images wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
+
+% --- Outputs from this function are returned to the command line.
+function varargout = gui_images_OutputFcn(hObject, eventdata, handles) 
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+varargout{1} = handles.output;
+
+
+% --- Executes on button press in Select_image.
+function Select_image_Callback(hObject, eventdata, handles)
+% hObject    handle to Select_image (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global MRI_input
+[filename,pathname]=uigetfile('*.*','Select the input image');
+filewithpath=strcat(pathname,filename);
+MRI_input=imread(filewithpath);
+axes(handles.axes1)
+imshow(MRI_input)
+% Hint: get(hObject,'Value') returns toggle state of Select_image
+
+
+% --- Executes on button press in display_next_image.
+function display_next_image_Callback(hObject, eventdata, handles)
+% hObject    handle to display_next_image (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global I MRI_input
+I= rgb2gray(MRI_input);
+axes(handles.axes3)
+imshow(I)
+
+% --- Executes on button press in display_next_image2.
+function display_next_image2_Callback(hObject, eventdata, handles)
+% hObject    handle to display_next_image2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global I im
+hpf =[0 -1 0;-1 4 -1;0 -1 0]; %High Pass Filtering
+y_filt = imfilter(I, hpf, 'same');
+im=y_filt+I;
+axes(handles.axes4)
+imshow(im)
+
+
+% --- Executes on button press in display_next_image3.
+function display_next_image3_Callback(hObject, eventdata, handles)
+% hObject    handle to display_next_image3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global im I_fil
+I_fil=medfilt2(im,[5,5]); %using median filter for removal of salt & pepper noise
+axes(handles.axes5)
+imshow(I_fil)
+
+% --- Executes on button press in display_next_image4.
+function display_next_image4_Callback(hObject, eventdata, handles)
+% hObject    handle to display_next_image4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+global I I_fil Im_thr I_filMSE
+I_filMSE=immse(I_fil,I);
+Im_thr= imbinarize(I_fil,0.6); %binarising with threshold .6
+axes(handles.axes6)
+imshow(Im_thr)
+
+% --- Executes on button press in display_next_image5.
+function display_next_image5_Callback(hObject, eventdata, handles)
+% hObject    handle to display_next_image5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+global Im_thr gradmag
+hy = fspecial('sobel');
+hx = hy';
+Iy = imfilter(double(Im_thr), hy, 'replicate');
+Ix = imfilter(double(Im_thr), hx, 'replicate');
+gradmag=sqrt(Ix.^2 + Iy.^2);
+axes(handles.axes7)
+imshow(gradmag)
+
+
+% --- Executes on button press in pushbutton7.
+function pushbutton7_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+global L gradmag Lrgb
+L=watershed(gradmag);
+Lrgb=label2rgb(L);
+axes(handles.axes8)
+imshow(Lrgb)
+
+% --- Executes on button press in pushbutton10.
+function pushbutton10_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton10 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global Im_thr J
+J = edge(Im_thr,'Canny',0.4,0.6);
+axes(handles.axes9)
+imshow(J)
+
+% --- Executes on button press in pushbutton12.
+function pushbutton12_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton12 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+global Im_thr tumor
+
+label=bwlabel(Im_thr);
+stats=regionprops(label,'Solidity','Area');
+density=[stats.Solidity];
+area=[stats.Area];
+high_dense_area=density>0.5;
+max_area=max(area(high_dense_area));
+tumor_label=find(area==max_area);
+tumor=ismember(label,tumor_label);
+se=strel('square',5);
+tumor=imdilate(tumor,se);
+axes(handles.axes11)
+imshow(tumor)
+
+% --- Executes on button press in pushbutton13.
+function pushbutton13_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton13 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
